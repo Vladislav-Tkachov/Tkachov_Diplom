@@ -1,0 +1,6 @@
+@Diplom.Server_HostAddress = http://localhost:5226
+
+GET {{Diplom.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

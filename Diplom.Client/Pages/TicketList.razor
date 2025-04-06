@@ -1,0 +1,85 @@
+@page "/tickets"
+@using Diplom.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<h3>Список тікетів</h3>
+
+@if (tickets == null)
+{
+    <p><em>Завантаження...</em></p>
+}
+else if (!tickets.Any())
+{
+    <p>Немає доступних тікетів.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Назва</th>
+                <th>Тип</th>
+                <th>Категорія</th>
+                <th>Локація</th>
+                <th>Дата створення</th>
+                <th>Дії</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in tickets)
+            {
+                <tr>
+                    <td>@t.Id</td>
+                    <td>@t.Title</td>
+                    <td>@t.TicketType</td>
+                    <td>@t.Category</td>
+                    <td>@t.Location</td>
+                    <td>@t.CreatedAt.ToLocalTime()</td>
+                    <td>
+                        <a href="/ticket-details/@t.Id">Деталі</a> |
+                        <a href="/ticket-edit/@t.Id">Редагувати</a> |
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteTicket(t.Id)">Видалити</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-primary" @onclick="GoToCreate">Створити новий тікет</button>
+
+@code {
+    private List<Ticket> tickets;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tickets = await Http.GetFromJsonAsync<List<Ticket>>("api/tickets");
+    }
+
+    private void GoToCreate()
+    {
+        Navigation.NavigateTo("/ticket-create");
+    }
+
+    private async Task DeleteTicket(int id)
+    {
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", [$"Видалити тікет з ID = {id}?"]);
+        if (!confirm) return;
+
+        var response = await Http.DeleteAsync($"api/tickets/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            // Видаляємо з колекції
+            var ticketToRemove = tickets.FirstOrDefault(t => t.Id == id);
+            if (ticketToRemove != null)
+                tickets.Remove(ticketToRemove);
+        }
+        else
+        {
+            // Обробити помилку
+        }
+    }
+}

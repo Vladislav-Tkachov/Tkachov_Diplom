@@ -1,0 +1,64 @@
+@page "/create-ticket"
+@using Diplom.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+@attribute [Authorize]
+
+<h3>Створити тікет</h3>
+
+<EditForm Model="ticket" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    
+    <div class="mb-3">
+        <label>Назва:</label>
+        <InputText @bind-Value="ticket.Title" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Опис:</label>
+        <InputTextArea @bind-Value="ticket.Description" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Категорія:</label>
+        <InputSelect @bind-Value="ticket.Category" class="form-control">
+            <option value="">-- Виберіть категорію --</option>
+            <option value="Медикаменти">Медикаменти</option>
+            <option value="Одяг">Одяг</option>
+            <option value="Дрони">Дрони</option>
+        </InputSelect>
+    </div>
+    <div class="mb-3">
+        <label>Локація:</label>
+        <InputText @bind-Value="ticket.Location" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Тип тікету:</label>
+        <InputSelect @bind-Value="ticket.TicketType" class="form-control">
+            <option value="">-- Виберіть тип --</option>
+            <option value="Запит">Запит</option>
+            <option value="Пропозиція">Пропозиція</option>
+        </InputSelect>
+    </div>
+    <button type="submit" class="btn btn-primary">Створити тікет</button>
+</EditForm>
+
+@if (createdTicket != null)
+{
+    <p>Тікет створено з ID: @createdTicket.Id</p>
+    @if (!string.IsNullOrEmpty(createdTicket.ChatGroupName))
+    {
+        <p class="text-success">Матч знайдено! Чат група: @createdTicket.ChatGroupName</p>
+    }
+}
+@code {
+    private Ticket ticket = new();
+    private Ticket createdTicket;
+    private async Task HandleValidSubmit()
+    {
+        var response = await Http.PostAsJsonAsync("api/tickets", ticket);
+        if (response.IsSuccessStatusCode)
+        {
+            createdTicket = await response.Content.ReadFromJsonAsync<Ticket>();
+        }
+    }
+}

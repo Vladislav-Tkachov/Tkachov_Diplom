@@ -1,0 +1,49 @@
+@page "/ticket-details/{Id:int}"
+@using Diplom.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3>Деталі тікету</h3>
+
+@if (ticket == null)
+{
+    <p><em>Завантаження...</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@ticket.Title (@ticket.TicketType)</h5>
+            <p class="card-text">@ticket.Description</p>
+            <p class="card-text"><strong>Категорія:</strong> @ticket.Category</p>
+            <p class="card-text"><strong>Локація:</strong> @ticket.Location</p>
+            <p class="card-text"><strong>Дата створення:</strong> @ticket.CreatedAt.ToLocalTime()</p>
+            @if (!string.IsNullOrEmpty(ticket.ChatGroupName))
+            {
+                <p class="card-text text-success">Чат-група: @ticket.ChatGroupName</p>
+            }
+            else
+            {
+                <p class="card-text text-warning">Матч не знайдено. Очікуйте відповіді.</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Ticket ticket;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync($"api/tickets/{Id}");
+        if (response.IsSuccessStatusCode)
+        {
+            ticket = await response.Content.ReadFromJsonAsync<Ticket>();
+        }
+        else
+        {
+            // Обробити помилку (наприклад, тікет не знайдено)
+        }
+    }
+}

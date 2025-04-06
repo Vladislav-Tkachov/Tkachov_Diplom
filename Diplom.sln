@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diplom.Client", "Diplom.Client\Diplom.Client.csproj", "{0B08A634-09C6-4FE6-BAB7-6FDB4D9CBC4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diplom.Shared", "Diplom.Shared\Diplom.Shared.csproj", "{CB7B4B7D-3701-4105-B521-B1747D4FECE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diplom.Server", "Diplom.Server\Diplom.Server.csproj", "{8B66D252-57FC-4E6B-BBE5-FF7041EB2FC2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0B08A634-09C6-4FE6-BAB7-6FDB4D9CBC4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B08A634-09C6-4FE6-BAB7-6FDB4D9CBC4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B08A634-09C6-4FE6-BAB7-6FDB4D9CBC4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B08A634-09C6-4FE6-BAB7-6FDB4D9CBC4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB7B4B7D-3701-4105-B521-B1747D4FECE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB7B4B7D-3701-4105-B521-B1747D4FECE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB7B4B7D-3701-4105-B521-B1747D4FECE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB7B4B7D-3701-4105-B521-B1747D4FECE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B66D252-57FC-4E6B-BBE5-FF7041EB2FC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B66D252-57FC-4E6B-BBE5-FF7041EB2FC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B66D252-57FC-4E6B-BBE5-FF7041EB2FC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B66D252-57FC-4E6B-BBE5-FF7041EB2FC2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
