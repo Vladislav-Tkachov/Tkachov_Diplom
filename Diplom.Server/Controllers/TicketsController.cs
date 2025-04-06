@@ -43,9 +43,19 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] Ticket ticket)
     {
+        if (!ModelState.IsValid)
+        {
+            var errors = string.Join("\n", ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage));
+
+            return BadRequest($"Invalid ticket model:\n{errors}");
+        }
+
         _context.Tickets.Add(ticket);
         await _context.SaveChangesAsync();
-        return Ok(ticket);
+
+        return CreatedAtAction(nameof(GetTickets), new { id = ticket.Id }, ticket);
     }
 
     // 4. Оновлення тікету (Update)
@@ -56,7 +66,10 @@ public class TicketsController : ControllerBase
             return BadRequest("Id in URL doesn't match Ticket.Id");
 
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        {
+            var errors = string.Join("\n", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            return BadRequest($"Invalid ticket:\n{errors}");
+        }
 
         var existingTicket = await _context.Tickets.FindAsync(id);
         if (existingTicket == null)

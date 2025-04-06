@@ -24,7 +24,7 @@ public class Ticket
     public string TicketType { get; set; } // "Запит" або "Пропозиція"
 
     // При успішному матчінгу заповнюється ім'я групи чату
-    public string ChatGroupName { get; set; }
+    public string ChatGroupName { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
