@@ -1,31 +1,56 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Diplom.Server.Data;
 using Diplom.Server.Hubs;
 using Diplom.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Налаштування бази даних (для демонстрації використовується InMemory; для продакшена використовуйте SQL Server чи інше)
+// База даних
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseInMemoryDatabase("TicketsDB"));
 
-// Налаштування Identity
+// Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-    {
-        options.SignIn.RequireConfirmedAccount = false;
-    })
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Налаштування CORS для клієнтського додатку (замість "https://localhost:5002" вкажіть адресу вашого клієнта)
+// JWT-аутентифікація
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "super-secret-key";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "DiplomIssuer";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtIssuer,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
+
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorClient",
-        builder => builder
-            .WithOrigins("https://localhost:5002")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+    options.AddPolicy("AllowBlazorClient", builder => builder
+        .WithOrigins("https://localhost:5002")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
 });
 
 builder.Services.AddControllers();
@@ -33,8 +58,6 @@ builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
-// Реєстрація сервісу матчінгу
 builder.Services.AddScoped<MatchingService>();
 
 var app = builder.Build();
@@ -59,7 +82,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapRazorPages();
 app.MapHub<ChatHub>("/chathub");
-
 app.MapFallbackToFile("index.html");
 
 app.Run();

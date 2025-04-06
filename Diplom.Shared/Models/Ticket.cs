@@ -21,7 +21,7 @@ public class Ticket
     public string Location { get; set; }
 
     [Required(ErrorMessage = "Тип тікету є обов'язковим")]
-    public string TicketType { get; set; } // "Запит" або "Пропозиція"
+    public string Type { get; set; } // "Запит" або "Пропозиція"
 
     // При успішному матчінгу заповнюється ім'я групи чату
     public string ChatGroupName { get; set; } = string.Empty;

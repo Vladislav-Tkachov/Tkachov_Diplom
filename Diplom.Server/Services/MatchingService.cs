@@ -16,10 +16,10 @@ public class MatchingService
     // у якого ще не встановлено ChatGroupName
     public async Task<Ticket> TryMatchTicketAsync(Ticket ticket)
     {
-        string oppositeType = ticket.TicketType == "Запит" ? "Пропозиція" : "Запит";
+        string oppositeType = ticket.Type == "Запит" ? "Пропозиція" : "Запит";
 
         var match = await _context.Tickets.FirstOrDefaultAsync(t =>
-            t.TicketType == oppositeType &&
+            t.Type == oppositeType &&
             t.Category == ticket.Category &&
             t.Location == ticket.Location &&
             string.IsNullOrEmpty(t.ChatGroupName));

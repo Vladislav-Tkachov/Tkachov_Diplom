@@ -1,63 +1,70 @@
-@page "/chat"
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.SignalR.Client
+@page "/chat/{TicketId:int}"
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@attribute [Authorize]
+@inject HttpClient Http
+@using Microsoft.AspNetCore.SignalR.Client
 
-<h3>Чат</h3>
+<h3>Чат тікету #@TicketId</h3>
 
 <div class="mb-3">
-    <InputText @bind-Value="messageInput" placeholder="Введіть повідомлення" class="form-control" />
-    <button class="btn btn-primary mt-2" @onclick="SendMessage">Надіслати</button>
+    <ul>
+        @foreach (var message in messages)
+        {
+            <li><b>@message.User:</b> @message.Text</li>
+        }
+    </ul>
 </div>
 
-<ul class="list-group">
-    @foreach (var msg in messages)
-    {
-        <li class="list-group-item">@msg</li>
-    }
-</ul>
+<input class="form-control mb-2" placeholder="Ваше ім'я" @bind="user" />
+<textarea class="form-control mb-2" placeholder="Повідомлення" @bind="messageInput"></textarea>
+<button class="btn btn-primary" @onclick="SendMessage">Надіслати</button>
 
 @code {
-    private HubConnection hubConnection;
-    private string messageInput;
-    private List<string> messages = new List<string>();
-    private string currentUser = "User";
+    [Parameter] public int TicketId { get; set; }
+
+    private HubConnection? hubConnection;
+    private string user = string.Empty;
+    private string messageInput = string.Empty;
+    private List<Message> messages = new();
+
+    private string GroupName => $"ticket-{TicketId}";
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity.IsAuthenticated)
-        {
-            currentUser = user.Identity.Name;
-        }
-
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
+            .WithAutomaticReconnect()
             .Build();
 
         hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
         {
-            messages.Add($"{user}: {message}");
-            StateHasChanged();
+            messages.Add(new Message { User = user, Text = message });
+            InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();
-
-        // Приєднуємося до групи "default" для демонстрації. 
-        // В реальному застосунку ви можете приєднуватися до групи, що відповідає ID тікету або іншому ключу.
-        await hubConnection.SendAsync("JoinGroup", "default");
+        await hubConnection.SendAsync("JoinGroup", GroupName);
     }
 
     private async Task SendMessage()
     {
-        if (!string.IsNullOrWhiteSpace(messageInput))
+        if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
         {
-            await hubConnection.SendAsync("SendMessage", "default", currentUser, messageInput);
+            await hubConnection.SendAsync("SendMessage", GroupName, user, messageInput);
             messageInput = string.Empty;
+        }
+    }
+
+    private class Message
+    {
+        public string User { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.DisposeAsync();
         }
     }
 }
