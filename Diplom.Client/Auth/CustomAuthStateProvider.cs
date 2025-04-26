@@ -3,6 +3,7 @@ using Blazored.LocalStorage;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Components;
 
 namespace Diplom.Client.Auth
@@ -11,12 +12,42 @@ namespace Diplom.Client.Auth
     {
         private readonly ILocalStorageService _localStorage;
         private readonly NavigationManager _navigationManager;
+        private HttpClient _httpClient;
 
-        public CustomAuthStateProvider(ILocalStorageService localStorage, NavigationManager navigationManager)
+        public CustomAuthStateProvider(ILocalStorageService localStorage, NavigationManager navigationManager, HttpClient httpClient)
         {
             _localStorage = localStorage;
             _navigationManager = navigationManager;
+            _httpClient = httpClient;
         }
+        
+        public async Task<bool> Login(string email, string password)
+        {
+            try
+            {
+                var loginModel = new { Email = email, Password = password };
+                var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginModel);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return false;
+                }
+
+                var token = await response.Content.ReadAsStringAsync();
+
+                await _localStorage.SetItemAsync("authToken", token);
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
+
+                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {

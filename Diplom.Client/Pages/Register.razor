@@ -1,52 +1,64 @@
 @page "/register"
-@inject HttpClient Http
+@using Diplom.Shared
 @inject NavigationManager Navigation
+@inject HttpClient Http
+@inject ToastService ToastService
 
-<h3>Реєстрація</h3>
+<h3 class="text-center mb-4">Реєстрація</h3>
 
-<EditForm Model="registerModel" OnValidSubmit="HandleRegister">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="mb-3">
-        <label>Email:</label>
-        <InputText class="form-control" @bind-Value="registerModel.Email" />
+<div class="d-flex justify-content-center">
+    <div class="card p-4 shadow-sm" style="width: 22rem;">
+        <div class="mb-3">
+            <input class="form-control" @bind="email" placeholder="Email" />
+        </div>
+        <div class="mb-3">
+            <input type="password" class="form-control" @bind="password" placeholder="Пароль" />
+        </div>
+        <div class="mb-3">
+            <input type="password" class="form-control" @bind="confirmPassword" placeholder="Повторіть пароль" />
+        </div>
+        <button class="btn btn-success w-100" @onclick="RegisterUser" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            else
+            {
+                <span>Зареєструватися</span>
+            }
+        </button>
+        <div class="text-center mt-3">
+            <a href="/login">Вже є акаунт? Увійти</a>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label>Пароль:</label>
-        <InputText class="form-control" type="password" @bind-Value="registerModel.Password" />
-    </div>
-
-    <button class="btn btn-success" type="submit">Зареєструватися</button>
-</EditForm>
-
-@if (!string.IsNullOrEmpty(error))
-{
-    <div class="alert alert-danger mt-3">@error</div>
-}
+</div>
 
 @code {
-    private RegisterModel registerModel = new();
-    private string error = string.Empty;
+    private string email;
+    private string password;
+    private string confirmPassword;
+    private bool isLoading = false;
 
-    private async Task HandleRegister()
+    private async Task RegisterUser()
     {
-        var response = await Http.PostAsJsonAsync("api/auth/register", registerModel);
+        if (password != confirmPassword)
+        {
+            // TODO: Показати помилку про невідповідність паролів
+            return;
+        }
+
+        isLoading = true;
+        var response = await Http.PostAsJsonAsync("api/auth/register", new { Email = email, Password = password });
+        isLoading = false;
 
         if (response.IsSuccessStatusCode)
         {
+            ToastService.ShowSuccess("Успішна реєстрація!");
             Navigation.NavigateTo("/login");
         }
         else
         {
-            error = await response.Content.ReadAsStringAsync();
+            ToastService.ShowError("Помилка реєстрації. Спробуйте ще раз.");
         }
-    }
-
-    public class RegisterModel
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
     }
 }

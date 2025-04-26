@@ -1,60 +1,55 @@
 @page "/login"
-@inject HttpClient Http
+@using Diplom.Shared
 @inject NavigationManager Navigation
-@inject Client.Auth.CustomAuthStateProvider AuthStateProvider
+@inject HttpClient Http
+@inject Client.Auth.CustomAuthStateProvider AuthProvider
+@inject ToastService ToastService
 
-<h3>Вхід</h3>
+<h3 class="text-center mb-4">Вхід</h3>
 
-<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="mb-3">
-        <label>Email:</label>
-        <InputText class="form-control" @bind-Value="loginModel.Email" />
+<div class="d-flex justify-content-center">
+    <div class="card p-4 shadow-sm" style="width: 22rem;">
+        <div class="mb-3">
+            <input class="form-control" @bind="email" placeholder="Email" />
+        </div>
+        <div class="mb-3">
+            <input type="password" class="form-control" @bind="password" placeholder="Пароль" />
+        </div>
+        <button class="btn btn-primary w-100" @onclick="LoginUser" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            else
+            {
+                <span>Увійти</span>
+            }
+        </button>
+        <div class="text-center mt-3">
+            <a href="/register">Ще немає акаунта? Реєстрація</a>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label>Пароль:</label>
-        <InputText class="form-control" type="password" @bind-Value="loginModel.Password" />
-    </div>
-
-    <button class="btn btn-primary" type="submit">Увійти</button>
-</EditForm>
-
-@if (!string.IsNullOrEmpty(error))
-{
-    <div class="alert alert-danger mt-3">@error</div>
-}
+</div>
 
 @code {
-    private LoginModel loginModel = new();
-    private string error = string.Empty;
+    private string email;
+    private string password;
+    private bool isLoading = false;
 
-    private async Task HandleLogin()
+    private async Task LoginUser()
     {
-        var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
+        isLoading = true;
+        var loginResult = await AuthProvider.Login(email, password);
+        isLoading = false;
 
-        if (response.IsSuccessStatusCode)
+        if (loginResult)
         {
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-            await AuthStateProvider.NotifyUserAuthentication(result!.Token);
-            Navigation.NavigateTo("/");
+            ToastService.ShowSuccess("Успішний вхід!");
+            Navigation.NavigateTo("/tickets");
         }
         else
         {
-            error = await response.Content.ReadAsStringAsync();
+            ToastService.ShowError("Невірний логін або пароль.");
         }
-    }
-
-    public class LoginModel
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
-    public class LoginResponse
-    {
-        public string Token { get; set; } = string.Empty;
     }
 }

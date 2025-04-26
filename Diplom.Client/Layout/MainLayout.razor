@@ -1,34 +1,19 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
-@inject Diplom.Client.Auth.CustomAuthStateProvider AuthProvider
 @inject AuthenticationStateProvider AuthStateProvider
+@inject Diplom.Client.Auth.CustomAuthStateProvider AuthProvider
+@using Microsoft.AspNetCore.Components.Authorization
+@using Diplom.Pages
 
-<AuthorizeView>
-    <Authorized>
-        <div class="d-flex justify-content-end m-3">
-            <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
-        </div>
-    </Authorized>
-    <NotAuthorized>
-        <div class="d-flex justify-content-end m-3">
-            <button class="btn btn-outline-primary me-2" @onclick="@(() => Navigation.NavigateTo("/login"))">Вхід</button>
-            <button class="btn btn-outline-success" @onclick="@(() => Navigation.NavigateTo("/register"))">Реєстрація</button>
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+@inherits LayoutComponentBase
 
-<div class="container mt-4">
-    @Body
-</div>
-
-@code {
-    private async Task Logout()
-    {
-        await AuthProvider.Logout();
-        Navigation.NavigateTo("/login");
-    }
-}
+<CascadingAuthenticationState>
+    <NavMenu />
+    <Toast />
+    <div class="container mt-4">
+        @Body
+    </div>
+</CascadingAuthenticationState>
 
 
 <style>

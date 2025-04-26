@@ -6,15 +6,17 @@
 
 <AuthorizeView>
     <Authorized>
-        <button class="btn btn-outline-danger mb-3" @onclick="Logout">Вийти</button>
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
+        </div>
     </Authorized>
 </AuthorizeView>
 
-<h3>Список тікетів</h3>
+<h3 class="text-center">Список тікетів</h3>
 
 @if (isLoading)
 {
-    <div class="text-center mt-5">
+    <div class="spinner-center">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
@@ -28,16 +30,16 @@ else if (tickets == null || !tickets.Any())
 }
 else
 {
-    <div class="d-flex flex-wrap gap-3 justify-content-start mt-4">
+    <div class="d-flex flex-wrap gap-4 justify-content-center mt-4">
         @foreach (var ticket in tickets)
         {
-            <div class="card ticket-card" style="width: 18rem;">
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <div>
-                        <h5 class="card-title">@ticket.Title</h5>
-                        <p class="card-text description-text">@ticket.Description</p>
-                    </div>
-                    <button class="btn btn-primary mt-3" @onclick="@(() => OpenTicket(ticket.Id))">Переглянути</button>
+            <div class="card ticket-card" style="width: 20rem;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@ticket.Title</h5>
+                    <p class="card-text description-text">@ticket.Description</p>
+                    <button class="btn btn-primary mt-auto" @onclick="@(() => OpenTicket(ticket.Id))">
+                        Переглянути
+                    </button>
                 </div>
             </div>
         }
@@ -46,7 +48,7 @@ else
 
 <style>
     .description-text {
-        max-height: 3.6em; /* 2 рядки */
+        max-height: 3.6em; /* 2 рядки тексту */
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
@@ -59,8 +61,8 @@ else
     }
 
     .ticket-card:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transform: scale(1.03);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
     }
 </style>
 

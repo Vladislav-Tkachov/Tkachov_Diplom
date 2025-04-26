@@ -8,25 +8,59 @@
 
 <AuthorizeView>
     <Authorized>
-        <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
+        </div>
     </Authorized>
 </AuthorizeView>
 
-<h3>Чат тікету @TicketId</h3>
+<h3 class="text-center">Чат тікету №@TicketId</h3>
 
-<div class="input-group mb-3">
-    <input @bind="messageInput" @ref="messageInputRef" class="form-control" placeholder="Ваше повідомлення..." @onkeydown="HandleEnterKey" />
-    <button class="btn btn-success" @onclick="SendMessage">Надіслати</button>
+<div class="chat-container">
+    <div class="messages-container" @ref="messagesContainerRef">
+        @foreach (var (user, message) in messages)
+        {
+            <div class="alert alert-primary p-2 m-1">
+                <strong>@user:</strong> @message
+            </div>
+        }
+    </div>
+
+    <div class="input-group mt-3">
+        <input @bind="messageInput" @ref="messageInputRef" class="form-control" placeholder="Ваше повідомлення..." @onkeydown="HandleEnterKey" />
+        <button class="btn btn-success" @onclick="SendMessage" disabled="@isSending">
+            @if (isSending)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            else
+            {
+                <span>Надіслати</span>
+            }
+        </button>
+    </div>
 </div>
 
-<div class="mt-3" style="max-height: 400px; overflow-y: auto;" @ref="messagesContainerRef">
-    @foreach (var (user, message) in messages)
-    {
-        <div class="alert alert-primary p-2 m-1">
-            <strong>@user:</strong> @message
-        </div>
+<style>
+    .chat-container {
+        max-width: 600px;
+        margin: auto;
+        margin-top: 20px;
+        padding: 20px;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
-</div>
+
+    .messages-container {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+</style>
 
 @code {
     [Parameter] public int TicketId { get; set; }
@@ -35,6 +69,7 @@
     private List<(string user, string message)> messages = new();
     private string messageInput = "";
     private string currentUserName = "Анонім";
+    private bool isSending = false;
 
     private ElementReference messageInputRef;
     private ElementReference messagesContainerRef;
@@ -44,7 +79,7 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        if (user.Identity?.IsAuthenticated ?? false)
         {
             currentUserName = user.Identity.Name ?? "Користувач";
         }
@@ -68,9 +103,11 @@
     {
         if (!string.IsNullOrWhiteSpace(messageInput))
         {
+            isSending = true;
             await hubConnection.SendAsync("SendMessage", $"ticket-{TicketId}", currentUserName, messageInput);
             messageInput = "";
             await messageInputRef.FocusAsync();
+            isSending = false;
         }
     }
 
