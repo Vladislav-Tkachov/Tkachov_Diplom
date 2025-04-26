@@ -1,44 +1,27 @@
-﻿@inherits LayoutComponentBase
-@inject NavigationManager Navigation
-@inject Client.Auth.CustomAuthStateProvider AuthProvider
-@using Microsoft.AspNetCore.Components.Authorization
-
-<PageTitle>Diplom</PageTitle>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <AuthorizeView>
     <Authorized>
-        <div class="d-flex justify-content-end m-2">
-            <button class="btn btn-outline-secondary me-2" @onclick="Logout">Вийти</button>
-        </div>
+        <button class="btn btn-outline-primary" @onclick="Logout">Вийти</button>
     </Authorized>
     <NotAuthorized>
-        <div class="d-flex justify-content-end m-2">
-            <button class="btn btn-outline-primary me-2" @onclick='() => Navigation.NavigateTo("/login")'>Вхід</button>
-            <button class="btn btn-outline-success" @onclick='() => Navigation.NavigateTo("/register")'>Реєстрація</button>
-        </div>
+        <button class="btn btn-outline-primary" @onclick='() => Navigation.NavigateTo("/login")'>Вхід</button>
+        <button class="btn btn-outline-primary" @onclick='() => Navigation.NavigateTo("/register")'>Реєстрація</button>
     </NotAuthorized>
 </AuthorizeView>
-
-<AuthorizeView>
-    <Authorized>
-        <div class="m-2">
-            <button class="btn btn-success" @onclick='() => Navigation.NavigateTo("/createticket")'>Створити тікет</button>
-        </div>
-    </Authorized>
-    <NotAuthorized>
-        <p class="text-danger m-2">Для доступу до створення тікетів необхідна авторизація.</p>
-    </NotAuthorized>
-</AuthorizeView>
-
-<LayoutView>
-    @Body
-</LayoutView>
 
 @code {
+    [Inject]
+    private NavigationManager Navigation { get; set; }
+
     private async Task Logout()
     {
-        await AuthProvider.NotifyUserLogout();
-        Navigation.NavigateTo("/");
+        if (AuthenticationStateProvider is Client.Auth.CustomAuthStateProvider customAuthStateProvider)
+        {
+            await customAuthStateProvider.Logout();
+            Navigation.NavigateTo("/");
+        }
     }
 }
 
