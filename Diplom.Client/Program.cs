@@ -5,7 +5,6 @@ using Blazored.LocalStorage;
 using Diplom.Client;
 using System.Net.Http;
 using Diplom;
-using Diplom.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

@@ -1,64 +1,45 @@
 @page "/register"
-@using Diplom.Shared
-@inject HttpClient Http
-@inject NavigationManager Navigation
-@inject ToastService ToastService
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@using Diplom.Client
+@using Diplom.Shared.Models
 
-<h3 class="text-center mb-4">Реєстрація</h3>
+<h3>Register</h3>
 
-<div class="d-flex justify-content-center">
-    <div class="card p-4 shadow-sm" style="width: 22rem;">
-        <div class="mb-3">
-            <input class="form-control" @bind="email" placeholder="Email" />
-        </div>
-        <div class="mb-3">
-            <input type="password" class="form-control" @bind="password" placeholder="Пароль" />
-        </div>
-        <div class="mb-3">
-            <input type="password" class="form-control" @bind="confirmPassword" placeholder="Повторіть пароль" />
-        </div>
-        <button class="btn btn-success w-100" @onclick="RegisterUser" disabled="@isLoading">
-            @if (isLoading)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            }
-            else
-            {
-                <span>Зареєструватися</span>
-            }
-        </button>
-        <div class="text-center mt-3">
-            <a href="/login">Вже маєте акаунт? Вхід</a>
-        </div>
+<EditForm Model="registerModel" OnValidSubmit="HandleRegister" class="form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Email:</label>
+        <InputText @bind-Value="registerModel.Email" class="form-control" />
     </div>
-</div>
+    <div class="form-group">
+        <label>Password:</label>
+        <InputText @bind-Value="registerModel.Password" type="password" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Confirm Password:</label>
+        <InputText @bind-Value="registerModel.ConfirmPassword" type="password" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Register</button>
+</EditForm>
 
 @code {
-    private string email;
-    private string password;
-    private string confirmPassword;
-    private bool isLoading = false;
+    private RegisterModel registerModel = new RegisterModel();
 
-    private async Task RegisterUser()
+    private async Task HandleRegister()
     {
-        if (password != confirmPassword)
-        {
-            ToastService.ShowError("Паролі не співпадають!");
-            return;
-        }
+        var result = await AuthService.Register(registerModel);
 
-        isLoading = true;
-        var response = await Http.PostAsJsonAsync("api/auth/register", new { Email = email, Password = password });
-        isLoading = false;
-
-        if (response.IsSuccessStatusCode)
+        if (result)
         {
-            ToastService.ShowSuccess("Успішна реєстрація!");
-            Navigation.NavigateTo("/login");
+            NavigationManager.NavigateTo("/login");
         }
         else
         {
-            ToastService.ShowError("Помилка реєстрації!");
+            // Показати помилку
         }
     }
 }

@@ -32,6 +32,12 @@ namespace Diplom.Client
             return true;
         }
 
+        public async Task<bool> Register(RegisterModel registerModel)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/auth/register", registerModel);
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task Logout()
         {
             await _authStateProvider.MarkUserAsLoggedOut();
