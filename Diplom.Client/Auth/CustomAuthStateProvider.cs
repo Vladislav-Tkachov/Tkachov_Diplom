@@ -23,7 +23,6 @@ namespace Diplom.Client.Auth
         {
             var token = await _localStorage.GetItemAsync<string>("authToken");
 
-            var identity = new ClaimsIdentity();
             _httpClient.DefaultRequestHeaders.Authorization = null;
 
             if (!string.IsNullOrWhiteSpace(token))
@@ -32,12 +31,14 @@ namespace Diplom.Client.Auth
 
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(token);
-                identity = new ClaimsIdentity(jwtToken.Claims, "jwt");
+                var identity = new ClaimsIdentity(jwtToken.Claims, "jwt");
+                var user = new ClaimsPrincipal(identity);
+                return new AuthenticationState(user);
             }
 
-            var user = new ClaimsPrincipal(identity);
-            return new AuthenticationState(user);
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
+
 
         public async Task<bool> Login(string email, string password)
         {

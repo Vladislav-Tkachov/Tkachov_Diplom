@@ -1,8 +1,10 @@
 @page "/tickets"
 @using Diplom.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject Diplom.Client.Auth.CustomAuthStateProvider AuthProvider
+@inject AuthenticationStateProvider AuthStateProvider
 
 <AuthorizeView>
     <Authorized>
@@ -74,7 +76,20 @@ else
     {
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
             tickets = await Http.GetFromJsonAsync<List<Ticket>>("api/tickets");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Помилка завантаження тікетів: {ex.Message}");
         }
         finally
         {
