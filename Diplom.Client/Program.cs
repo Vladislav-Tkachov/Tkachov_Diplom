@@ -5,6 +5,8 @@ using Blazored.LocalStorage;
 using Diplom.Client;
 using System.Net.Http;
 using Diplom;
+using Diplom.Services;
+using Diplom.Shared;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -15,5 +17,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<CustomAuthStateProvider>());
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ToastService>();
+builder.Services.AddScoped<ApiService>();
 
 await builder.Build().RunAsync();

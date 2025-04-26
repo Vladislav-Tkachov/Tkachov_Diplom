@@ -1,85 +1,105 @@
 @page "/tickets"
-@using Diplom.Shared
+@inject ApiService ApiService
+@using Diplom.Services
 @using Diplom.Shared.Models
-@using Microsoft.AspNetCore.Components.Authorization
-@inject HttpClient Http
-@inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthStateProvider
-@inject ToastService ToastService
 
-<h3 class="text-center my-4">Список тікетів</h3>
+<h3 class="mb-4">Створити запит або пропозицію допомоги</h3>
 
-@if (isLoading)
+@if (tickets == null)
 {
-    <div class="text-center">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-}
-else if (isUnauthorized)
-{
-    <div class="text-center text-danger mt-5">
-        <p>Неавторизований доступ. Увійдіть заново.</p>
-    </div>
-}
-else if (tickets == null || !tickets.Any())
-{
-    <div class="text-center text-muted mt-5">
-        <p>Немає доступних тікетів</p>
-    </div>
+    <p>Завантаження...</p>
 }
 else
 {
-    <div class="row">
+    <EditForm Model="newTicket" OnValidSubmit="HandleCreateTicket" class="card p-4 mb-4 shadow-sm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group mb-3">
+            <label>Категорія <span class="text-danger">*</span></label>
+            <InputText @bind-Value="newTicket.Category" class="form-control" placeholder="Введіть категорію допомоги" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Локація <span class="text-danger">*</span></label>
+            <InputText @bind-Value="newTicket.Location" class="form-control" placeholder="Введіть локацію" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Тип тікету <span class="text-danger">*</span></label>
+            <InputSelect @bind-Value="newTicket.Type" class="form-control">
+                <option value="">-- Виберіть тип --</option>
+                <option value="Request">Потребую допомогу</option>
+                <option value="Offer">Пропоную допомогу</option>
+            </InputSelect>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Заголовок</label>
+            <InputText @bind-Value="newTicket.Title" class="form-control" placeholder="Короткий заголовок" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Опис</label>
+            <InputTextArea @bind-Value="newTicket.Description" class="form-control" placeholder="Детальний опис вашої пропозиції або потреби" rows="3" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Створити тікет</button>
+    </EditForm>
+
+    <h3>Список запитів/пропозицій</h3>
+    <ul class="list-group">
         @foreach (var ticket in tickets)
         {
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">@ticket.Title</h5>
-                        <p class="card-text">@ticket.Description</p>
-                        <button class="btn btn-primary" @onclick="() => ViewTicket(ticket.Id)">Переглянути</button>
-                    </div>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>@ticket.Category</strong> | @ticket.Location | @ticket.Type<br />
+                    <em>@ticket.Title</em> - @ticket.Description
                 </div>
-            </div>
+                <button class="btn btn-danger btn-sm" @onclick="() => DeleteTicket(ticket.Id)">Видалити</button>
+            </li>
         }
-    </div>
+    </ul>
 }
 
 @code {
     private List<Ticket> tickets;
-    private bool isLoading = true;
-    private bool isUnauthorized = false;
+    private Ticket newTicket = new Ticket();
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
+        await LoadTicketsAsync();
+    }
 
-            if (!user.Identity?.IsAuthenticated ?? true)
-            {
-                Navigation.NavigateTo("/login");
-                return;
-            }
-
-            tickets = await Http.GetFromJsonAsync<List<Ticket>>("api/tickets");
-        }
-        catch (HttpRequestException ex)
+    private async Task LoadTicketsAsync()
+    {
+        var response = await ApiService.GetTicketsAsync();
+        if (response.IsSuccessStatusCode)
         {
-            Console.WriteLine($"Помилка завантаження тікетів: {ex.Message}");
-            isUnauthorized = true;
+            tickets = await response.Content.ReadFromJsonAsync<List<Ticket>>();
         }
-        finally
+        else
         {
-            isLoading = false;
+            tickets = new List<Ticket>();
         }
     }
 
-    private void ViewTicket(int ticketId)
+    private async Task HandleCreateTicket()
     {
-        Navigation.NavigateTo($"/ticket-details/{ticketId}");
+        var response = await ApiService.PostTicketAsync(newTicket);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadTicketsAsync();
+            newTicket = new Ticket(); // Очистити форму
+        }
+    }
+
+    private async Task DeleteTicket(int ticketId)
+    {
+        var response = await ApiService.DeleteTicketAsync(ticketId);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadTicketsAsync();
+        }
     }
 }

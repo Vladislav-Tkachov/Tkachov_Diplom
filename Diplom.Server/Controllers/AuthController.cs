@@ -52,9 +52,12 @@ namespace Diplom.Server.Controllers
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.Now.AddHours(3),
-                signingCredentials: creds);
+                signingCredentials: creds
+            );
 
             return Ok(new JwtSecurityTokenHandler().WriteToken(token));
         }
