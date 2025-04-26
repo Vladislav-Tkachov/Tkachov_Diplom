@@ -1,28 +1,35 @@
 using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Diplom;
 using Diplom.Client.Auth;
 using Diplom.Shared;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Настройка HttpClient для API сервера
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("https://localhost:5001/") });
-
-//builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("Diplom"));
-
-// Добавляем API авторизацию
-builder.Services.AddApiAuthorization();
-
+// Реєстрація LocalStorage
 builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-builder.Services.AddScoped<CustomAuthStateProvider>();
 
+// Реєстрація сервісу авторизації
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthStateProvider>());
+
+// HttpClient з токеном із LocalStorage
+builder.Services.AddScoped(sp =>
+{
+    var navigationManager = sp.GetRequiredService<NavigationManager>();
+
+    return new HttpClient
+    {
+        BaseAddress = new Uri(navigationManager.BaseUri)
+    };
+});
+
+
+// Toast для повідомлень
 builder.Services.AddScoped<ToastService>();
 
 await builder.Build().RunAsync();
