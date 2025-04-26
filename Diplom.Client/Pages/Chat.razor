@@ -1,69 +1,103 @@
 @page "/chat/{TicketId:int}"
-@inject NavigationManager Navigation
-@inject HttpClient Http
 @using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject Diplom.Client.Auth.CustomAuthStateProvider AuthProvider
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
 
-<h3>Чат тікету #@TicketId</h3>
+<AuthorizeView>
+    <Authorized>
+        <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
+    </Authorized>
+</AuthorizeView>
 
-<div class="mb-3">
-    <ul>
-        @foreach (var message in messages)
-        {
-            <li><b>@message.User:</b> @message.Text</li>
-        }
-    </ul>
+<h3>Чат тікету @TicketId</h3>
+
+<div class="input-group mb-3">
+    <input @bind="messageInput" @ref="messageInputRef" class="form-control" placeholder="Ваше повідомлення..." @onkeydown="HandleEnterKey" />
+    <button class="btn btn-success" @onclick="SendMessage">Надіслати</button>
 </div>
 
-<input class="form-control mb-2" placeholder="Ваше ім'я" @bind="user" />
-<textarea class="form-control mb-2" placeholder="Повідомлення" @bind="messageInput"></textarea>
-<button class="btn btn-primary" @onclick="SendMessage">Надіслати</button>
+<div class="mt-3" style="max-height: 400px; overflow-y: auto;" @ref="messagesContainerRef">
+    @foreach (var (user, message) in messages)
+    {
+        <div class="alert alert-primary p-2 m-1">
+            <strong>@user:</strong> @message
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public int TicketId { get; set; }
 
-    private HubConnection? hubConnection;
-    private string user = string.Empty;
-    private string messageInput = string.Empty;
-    private List<Message> messages = new();
+    private HubConnection hubConnection;
+    private List<(string user, string message)> messages = new();
+    private string messageInput = "";
+    private string currentUserName = "Анонім";
 
-    private string GroupName => $"ticket-{TicketId}";
+    private ElementReference messageInputRef;
+    private ElementReference messagesContainerRef;
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            currentUserName = user.Identity.Name ?? "Користувач";
+        }
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
-            .WithAutomaticReconnect()
             .Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        hubConnection.On<string, string>("ReceiveMessage", async (userName, message) =>
         {
-            messages.Add(new Message { User = user, Text = message });
-            InvokeAsync(StateHasChanged);
+            messages.Add((userName, message));
+            await ScrollToBottom();
+            StateHasChanged();
         });
 
         await hubConnection.StartAsync();
-        await hubConnection.SendAsync("JoinGroup", GroupName);
+        await hubConnection.SendAsync("JoinGroup", $"ticket-{TicketId}");
     }
 
     private async Task SendMessage()
     {
-        if (hubConnection is not null && hubConnection.State == HubConnectionState.Connected)
+        if (!string.IsNullOrWhiteSpace(messageInput))
         {
-            await hubConnection.SendAsync("SendMessage", GroupName, user, messageInput);
-            messageInput = string.Empty;
+            await hubConnection.SendAsync("SendMessage", $"ticket-{TicketId}", currentUserName, messageInput);
+            messageInput = "";
+            await messageInputRef.FocusAsync();
         }
     }
 
-    private class Message
+    private async Task ScrollToBottom()
     {
-        public string User { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
+        await JSRuntime.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+    }
+
+    private async Task Logout()
+    {
+        await AuthProvider.Logout();
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task HandleEnterKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection != null)
+        if (hubConnection is not null)
         {
+            await hubConnection.SendAsync("LeaveGroup", $"ticket-{TicketId}");
             await hubConnection.DisposeAsync();
         }
     }
