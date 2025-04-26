@@ -1,76 +1,56 @@
 @page "/tickets"
+@using Diplom.Shared
 @using Diplom.Shared.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
 @inject NavigationManager Navigation
-@inject Diplom.Client.Auth.CustomAuthStateProvider AuthProvider
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ToastService ToastService
 
-<AuthorizeView>
-    <Authorized>
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
-        </div>
-    </Authorized>
-</AuthorizeView>
-
-<h3 class="text-center">Список тікетів</h3>
+<h3 class="text-center my-4">Список тікетів</h3>
 
 @if (isLoading)
 {
-    <div class="spinner-center">
+    <div class="text-center">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
+else if (isUnauthorized)
+{
+    <div class="text-center text-danger mt-5">
+        <p>Неавторизований доступ. Увійдіть заново.</p>
+    </div>
+}
 else if (tickets == null || !tickets.Any())
 {
-    <div class="text-center mt-5">
-        <p class="text-muted">Немає тікетів для відображення</p>
+    <div class="text-center text-muted mt-5">
+        <p>Немає доступних тікетів</p>
     </div>
 }
 else
 {
-    <div class="d-flex flex-wrap gap-4 justify-content-center mt-4">
+    <div class="row">
         @foreach (var ticket in tickets)
         {
-            <div class="card ticket-card" style="width: 20rem;">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">@ticket.Title</h5>
-                    <p class="card-text description-text">@ticket.Description</p>
-                    <button class="btn btn-primary mt-auto" @onclick="@(() => OpenTicket(ticket.Id))">
-                        Переглянути
-                    </button>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@ticket.Title</h5>
+                        <p class="card-text">@ticket.Description</p>
+                        <button class="btn btn-primary" @onclick="() => ViewTicket(ticket.Id)">Переглянути</button>
+                    </div>
                 </div>
             </div>
         }
     </div>
 }
 
-<style>
-    .description-text {
-        max-height: 3.6em; /* 2 рядки тексту */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-    }
-
-    .ticket-card {
-        transition: all 0.3s ease-in-out;
-    }
-
-    .ticket-card:hover {
-        transform: scale(1.03);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-    }
-</style>
-
 @code {
     private List<Ticket> tickets;
     private bool isLoading = true;
+    private bool isUnauthorized = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,6 +70,7 @@ else
         catch (HttpRequestException ex)
         {
             Console.WriteLine($"Помилка завантаження тікетів: {ex.Message}");
+            isUnauthorized = true;
         }
         finally
         {
@@ -97,14 +78,8 @@ else
         }
     }
 
-    private async Task Logout()
+    private void ViewTicket(int ticketId)
     {
-        await AuthProvider.Logout();
-        Navigation.NavigateTo("/login");
-    }
-
-    private void OpenTicket(int id)
-    {
-        Navigation.NavigateTo($"/ticket/{id}");
+        Navigation.NavigateTo($"/ticket-details/{ticketId}");
     }
 }

@@ -1,7 +1,7 @@
 @page "/register"
 @using Diplom.Shared
-@inject NavigationManager Navigation
 @inject HttpClient Http
+@inject NavigationManager Navigation
 @inject ToastService ToastService
 
 <h3 class="text-center mb-4">Реєстрація</h3>
@@ -28,7 +28,7 @@
             }
         </button>
         <div class="text-center mt-3">
-            <a href="/login">Вже є акаунт? Увійти</a>
+            <a href="/login">Вже маєте акаунт? Вхід</a>
         </div>
     </div>
 </div>
@@ -43,7 +43,7 @@
     {
         if (password != confirmPassword)
         {
-            // TODO: Показати помилку про невідповідність паролів
+            ToastService.ShowError("Паролі не співпадають!");
             return;
         }
 
@@ -58,7 +58,7 @@
         }
         else
         {
-            ToastService.ShowError("Помилка реєстрації. Спробуйте ще раз.");
+            ToastService.ShowError("Помилка реєстрації!");
         }
     }
 }

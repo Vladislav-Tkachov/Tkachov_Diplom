@@ -4,7 +4,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace Diplom.Client.Auth
 {
@@ -27,18 +26,20 @@ namespace Diplom.Client.Auth
 
             if (!string.IsNullOrWhiteSpace(token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", token);
 
                 var handler = new JwtSecurityTokenHandler();
-                var jwtToken = handler.ReadJwtToken(token);
-                var identity = new ClaimsIdentity(jwtToken.Claims, "jwt");
-                var user = new ClaimsPrincipal(identity);
-                return new AuthenticationState(user);
+                if (handler.CanReadToken(token))
+                {
+                    var jwtToken = handler.ReadJwtToken(token);
+                    var identity = new ClaimsIdentity(jwtToken.Claims, "jwt");
+                    var user = new ClaimsPrincipal(identity);
+                    return new AuthenticationState(user);
+                }
             }
 
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
-
 
         public async Task<bool> Login(string email, string password)
         {

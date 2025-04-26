@@ -1,9 +1,12 @@
 @page "/login"
+@using Diplom.Client.Auth
 @using Diplom.Shared
-@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
-@inject Client.Auth.CustomAuthStateProvider AuthProvider
+@inject NavigationManager Navigation
 @inject ToastService ToastService
+@inject CustomAuthStateProvider AuthProvider
+@inject AuthenticationStateProvider AuthStateProvider
 
 <h3 class="text-center mb-4">Вхід</h3>
 
@@ -26,7 +29,7 @@
             }
         </button>
         <div class="text-center mt-3">
-            <a href="/register">Ще немає акаунта? Реєстрація</a>
+            <a href="/register">Немає акаунта? Зареєструватися</a>
         </div>
     </div>
 </div>
@@ -45,7 +48,17 @@
         if (loginResult)
         {
             ToastService.ShowSuccess("Успішний вхід!");
-            Navigation.NavigateTo("/tickets");
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+            if (authState.User.Identity.IsAuthenticated)
+            {
+                Navigation.NavigateTo("/tickets", forceLoad: true);
+            }
+            else
+            {
+                ToastService.ShowError("Не вдалося авторизуватись!");
+            }
         }
         else
         {
