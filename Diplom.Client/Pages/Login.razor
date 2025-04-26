@@ -1,68 +1,41 @@
 @page "/login"
-@using Diplom.Client.Auth
-@using Diplom.Shared
-@using Microsoft.AspNetCore.Components.Authorization
-@inject HttpClient Http
-@inject NavigationManager Navigation
-@inject ToastService ToastService
-@inject CustomAuthStateProvider AuthProvider
-@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@using Diplom.Client
+@using Diplom.Shared.Models
 
-<h3 class="text-center mb-4">Вхід</h3>
+<h3>Login</h3>
 
-<div class="d-flex justify-content-center">
-    <div class="card p-4 shadow-sm" style="width: 22rem;">
-        <div class="mb-3">
-            <input class="form-control" @bind="email" placeholder="Email" />
-        </div>
-        <div class="mb-3">
-            <input type="password" class="form-control" @bind="password" placeholder="Пароль" />
-        </div>
-        <button class="btn btn-primary w-100" @onclick="LoginUser" disabled="@isLoading">
-            @if (isLoading)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            }
-            else
-            {
-                <span>Увійти</span>
-            }
-        </button>
-        <div class="text-center mt-3">
-            <a href="/register">Немає акаунта? Зареєструватися</a>
-        </div>
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="loginModel.Email" />
     </div>
-</div>
+    <div>
+        <label>Password:</label>
+        <InputText @bind-Value="loginModel.Password" type="password" />
+    </div>
+
+    <button type="submit">Login</button>
+</EditForm>
 
 @code {
-    private string email;
-    private string password;
-    private bool isLoading = false;
+    private LoginModel loginModel = new LoginModel();
 
-    private async Task LoginUser()
+    private async Task HandleLogin()
     {
-        isLoading = true;
-        var loginResult = await AuthProvider.Login(email, password);
-        isLoading = false;
+        var result = await AuthService.Login(loginModel);
 
-        if (loginResult)
+        if (result)
         {
-            ToastService.ShowSuccess("Успішний вхід!");
-
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-
-            if (authState.User.Identity.IsAuthenticated)
-            {
-                Navigation.NavigateTo("/tickets", forceLoad: true);
-            }
-            else
-            {
-                ToastService.ShowError("Не вдалося авторизуватись!");
-            }
+            NavigationManager.NavigateTo("/tickets");
         }
         else
         {
-            ToastService.ShowError("Невірний логін або пароль.");
+            // Handle login error
         }
     }
 }

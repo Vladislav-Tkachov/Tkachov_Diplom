@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
-@inject Diplom.Client.Auth.CustomAuthStateProvider AuthProvider
+@inject Diplom.Client.CustomAuthStateProvider AuthProvider
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JSRuntime
 
@@ -118,7 +118,7 @@
 
     private async Task Logout()
     {
-        await AuthProvider.Logout();
+        await AuthProvider.MarkUserAsLoggedOut();
         Navigation.NavigateTo("/login");
     }
 

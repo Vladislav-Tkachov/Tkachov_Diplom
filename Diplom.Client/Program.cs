@@ -1,35 +1,20 @@
-using Blazored.LocalStorage;
-using Diplom;
-using Diplom.Client.Auth;
-using Diplom.Shared;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.LocalStorage;
+using Diplom.Client;
+using System.Net.Http;
+using Diplom;
+using Diplom.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
-// Реєстрація LocalStorage
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:5001/") });
 builder.Services.AddBlazoredLocalStorage();
-
-// Реєстрація сервісу авторизації
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthStateProvider>());
-
-// HttpClient з токеном із LocalStorage
-builder.Services.AddScoped(sp =>
-{
-    var navigationManager = sp.GetRequiredService<NavigationManager>();
-
-    return new HttpClient
-    {
-        BaseAddress = new Uri(navigationManager.BaseUri)
-    };
-});
-
-
-// Toast для повідомлень
-builder.Services.AddScoped<ToastService>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<CustomAuthStateProvider>());
+builder.Services.AddScoped<AuthService>();
 
 await builder.Build().RunAsync();

@@ -32,11 +32,11 @@
 
 @code {
     [Inject] private NavigationManager Navigation { get; set; }
-    [Inject] private Diplom.Client.Auth.CustomAuthStateProvider AuthProvider { get; set; }
+    [Inject] private Diplom.Client.CustomAuthStateProvider AuthProvider { get; set; }
 
     private async Task Logout()
     {
-        await AuthProvider.Logout();
+        await AuthProvider.MarkUserAsLoggedOut();
         Navigation.NavigateTo("/login");
     }
 }
