@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Blazored.LocalStorage;
-using Diplom.Shared.Models;
+using Diplom.Client.Shared.Models;
 
-namespace Diplom.Services;
+namespace Diplom.Client.Services;
 
 public class ApiService
 {

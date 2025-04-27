@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
-using Diplom.Client;
+using Diplom.Client.Client;
 using System.Net.Http;
 using Diplom;
+using Diplom.Client;
+using Diplom.Client.Services;
+using Diplom.Client.Shared;
 using Diplom.Services;
-using Diplom.Shared;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Diplom.Server.Hubs
+namespace Diplom.Client.Server.Hubs
 {
     [Authorize]
     public class ChatHub : Hub

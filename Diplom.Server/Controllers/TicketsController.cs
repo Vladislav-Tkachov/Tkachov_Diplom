@@ -1,10 +1,10 @@
-using Diplom.Server.Data;
-using Diplom.Shared.Models;
+using Diplom.Client.Server.Data;
+using Diplom.Client.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Diplom.Server.Controllers;
+namespace Diplom.Client.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

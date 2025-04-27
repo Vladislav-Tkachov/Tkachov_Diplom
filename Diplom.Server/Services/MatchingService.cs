@@ -1,8 +1,8 @@
-using Diplom.Server.Data;
-using Diplom.Shared.Models;
+using Diplom.Client.Server.Data;
+using Diplom.Client.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Diplom.Server.Services;
+namespace Diplom.Client.Server.Services;
 
 public class MatchingService
 {

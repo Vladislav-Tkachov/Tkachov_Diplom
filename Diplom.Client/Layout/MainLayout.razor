@@ -1,16 +1,16 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
-@inject Diplom.Client.CustomAuthStateProvider AuthProvider
+@inject Client.Client.CustomAuthStateProvider AuthProvider
 @using Microsoft.AspNetCore.Components.Authorization
 @using Diplom.Pages
 
 <CascadingAuthenticationState>
     <NavMenu />
-    <Toast />
     <div class="container mt-4">
         @Body
     </div>
+    <Toast />
 </CascadingAuthenticationState>
 
 

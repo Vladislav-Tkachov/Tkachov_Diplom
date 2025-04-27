@@ -1,37 +1,52 @@
-@using Diplom.Shared
+@using Diplom.Services
 @inject ToastService ToastService
 
-@if (!string.IsNullOrEmpty(message))
+@if (!string.IsNullOrEmpty(_message))
 {
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div class="toast show align-items-center text-white bg-@type border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">@message</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Закрити" @onclick="ClearToast"></button>
-            </div>
+    <div class="toast show position-fixed bottom-0 end-0 m-3" style="z-index: 1050;">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Повідомлення</strong>
+            <button type="button" class="btn-close" @onclick="ClearToast"></button>
+        </div>
+        <div class="toast-body">
+            @_message
         </div>
     </div>
 }
 
 @code {
-    private string message;
-    private string type;
+    private string _message;
+    private System.Timers.Timer _timer;
 
     protected override void OnInitialized()
     {
         ToastService.OnShow += ShowToast;
     }
 
-    private void ShowToast(string message, string type)
+    private void ShowToast(string message)
     {
-        this.message = message;
-        this.type = type;
+        _message = message;
         StateHasChanged();
+
+        _timer?.Stop();
+        _timer = new System.Timers.Timer(3000);
+        _timer.Elapsed += (_, _) =>
+        {
+            _message = string.Empty;
+            InvokeAsync(StateHasChanged);
+        };
+        _timer.AutoReset = false;
+        _timer.Start();
     }
 
     private void ClearToast()
     {
-        message = null;
-        StateHasChanged();
+        _message = string.Empty;
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnShow -= ShowToast;
+        _timer?.Dispose();
     }
 }

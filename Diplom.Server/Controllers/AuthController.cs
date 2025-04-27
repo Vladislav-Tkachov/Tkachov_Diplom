@@ -5,7 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Diplom.Server.Controllers
+namespace Diplom.Client.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

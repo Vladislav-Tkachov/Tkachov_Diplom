@@ -1,6 +1,6 @@
 // File: Shared/Models/LoginModel.cs
 
-namespace Diplom.Shared.Models
+namespace Diplom.Client.Shared.Models
 {
     public class LoginModel
     {

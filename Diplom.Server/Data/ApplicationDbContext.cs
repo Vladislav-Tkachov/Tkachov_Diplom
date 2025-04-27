@@ -1,8 +1,8 @@
-using Diplom.Shared.Models;
+using Diplom.Client.Shared.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Diplom.Server.Data;
+namespace Diplom.Client.Server.Data;
 
 public class ApplicationDbContext : IdentityDbContext
 {

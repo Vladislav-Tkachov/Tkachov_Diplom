@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Diplom.Server.Data;
-using Diplom.Server.Hubs;
-using Diplom.Server.Services;
+using Diplom.Client.Server.Data;
+using Diplom.Client.Server.Hubs;
+using Diplom.Client.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

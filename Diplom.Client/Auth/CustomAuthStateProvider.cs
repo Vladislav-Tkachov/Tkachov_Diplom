@@ -5,7 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-namespace Diplom.Client
+namespace Diplom.Client.Client
 {
     public class CustomAuthStateProvider : AuthenticationStateProvider
     {
