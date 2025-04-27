@@ -6,29 +6,19 @@ namespace Diplom.Client.Server.Hubs
     [Authorize]
     public class ChatHub : Hub
     {
-        public async Task SendMessage(string group, string user, string message)
+        public async Task SendMessage(string ticketId, string user, string message)
         {
-            if (!Context.User.Identity?.IsAuthenticated ?? true)
-            {
-                throw new HubException("Користувач не авторизований");
-            }
-
-            await Clients.Group(group).SendAsync("ReceiveMessage", user, message);
+            await Clients.Group(ticketId).SendAsync("ReceiveMessage", user, message);
         }
 
-        public async Task JoinGroup(string group)
+        public async Task JoinTicketRoom(string ticketId)
         {
-            if (!Context.User.Identity?.IsAuthenticated ?? true)
-            {
-                throw new HubException("Доступ заборонено. Увійдіть у систему.");
-            }
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+            await Groups.AddToGroupAsync(Context.ConnectionId, ticketId);
         }
 
-        public async Task LeaveGroup(string group)
+        public async Task LeaveTicketRoom(string ticketId)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, ticketId);
         }
     }
 }

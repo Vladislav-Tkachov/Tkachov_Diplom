@@ -1,9 +1,11 @@
 @page "/tickets"
 @inject Diplom.Client.Services.ApiService ApiService
-@inject Services.ToastService ToastService
+@inject NavigationManager NavigationManager
 @using Diplom.Client.Shared.Models
 
-<h3 class="mb-4">Створити запит або пропозицію допомоги</h3>
+<h3>Запити та Пропозиції</h3>
+
+<button class="btn btn-success mb-3" @onclick="ShowModal">Створити новий тікет</button>
 
 @if (tickets == null)
 {
@@ -11,89 +13,96 @@
 }
 else
 {
-    <EditForm Model="newTicket" OnValidSubmit="HandleCreateTicket" class="card p-4 mb-4 shadow-sm">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="form-group mb-3">
-            <label>Категорія <span class="text-danger">*</span></label>
-            <InputText @bind-Value="newTicket.Category" class="form-control" placeholder="Введіть категорію допомоги" />
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Локація <span class="text-danger">*</span></label>
-            <InputText @bind-Value="newTicket.Location" class="form-control" placeholder="Введіть локацію" />
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Тип тікету <span class="text-danger">*</span></label>
-            <InputSelect @bind-Value="newTicket.Type" class="form-control">
-                <option value="">-- Виберіть тип --</option>
-                <option value="Request">Потребую допомогу</option>
-                <option value="Offer">Пропоную допомогу</option>
-            </InputSelect>
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Заголовок</label>
-            <InputText @bind-Value="newTicket.Title" class="form-control" placeholder="Короткий заголовок" />
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Опис</label>
-            <InputTextArea @bind-Value="newTicket.Description" class="form-control" placeholder="Детальний опис вашої пропозиції або потреби" rows="3" />
-        </div>
-
-        <button type="submit" class="btn btn-success">Створити тікет</button>
-    </EditForm>
-
-    <div class="card p-3 mb-4">
-        <h5>Фільтрація тікетів</h5>
-        <div class="row g-3 align-items-center">
-            <div class="col-auto">
-                <select class="form-select" @bind="filterCategory">
-                    <option value="">Всі категорії</option>
-                    @foreach (var category in tickets.Select(t => t.Category).Distinct())
-                    {
-                        <option value="@category">@category</option>
-                    }
-                </select>
-            </div>
-            <div class="col-auto">
-                <select class="form-select" @bind="filterType">
-                    <option value="">Всі типи</option>
-                    <option value="Request">Потребую допомогу</option>
-                    <option value="Offer">Пропоную допомогу</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <h3>Список запитів/пропозицій</h3>
     <ul class="list-group">
-        @foreach (var ticket in FilteredTickets)
+        @foreach (var ticket in tickets)
         {
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                     <strong>@ticket.Category</strong> | @ticket.Location | @ticket.Type<br />
                     <em>@ticket.Title</em> - @ticket.Description
                 </div>
-                <button class="btn btn-danger btn-sm" @onclick="() => DeleteTicket(ticket.Id)">Видалити</button>
+                <div>
+                    <button class="btn btn-danger btn-sm me-2" @onclick="() => ConfirmDelete(ticket.Id)">Видалити</button>
+                    <a class="btn btn-primary btn-sm me-2" href="@($"/tickets/{ticket.Id}/chat")">Чат</a>
+                    @if (newMessages.ContainsKey(ticket.Id))
+                    {
+                        <span class="badge bg-danger">@newMessages[ticket.Id]</span>
+                    }
+                </div>
             </li>
         }
     </ul>
 }
 
+@if (showCreateModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Створити новий тікет</h5>
+                    <button type="button" class="btn-close" @onclick="HideModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="newTicket" OnValidSubmit="HandleCreateTicket">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group mb-3">
+                            <InputText @bind-Value="newTicket.Category" class="form-control" placeholder="Категорія *" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <InputText @bind-Value="newTicket.Location" class="form-control" placeholder="Локація *" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <InputSelect @bind-Value="newTicket.Type" class="form-control">
+                                <option value="">-- Виберіть тип --</option>
+                                <option value="Request">Потребую допомогу</option>
+                                <option value="Offer">Пропоную допомогу</option>
+                            </InputSelect>
+                        </div>
+                        <div class="form-group mb-3">
+                            <InputText @bind-Value="newTicket.Title" class="form-control" placeholder="Заголовок" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <InputTextArea @bind-Value="newTicket.Description" class="form-control" placeholder="Опис" rows="3" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Створити</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showConfirmDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Підтвердження видалення</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Ви впевнені, що хочете видалити цей тікет?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideConfirmDeleteModal">Скасувати</button>
+                    <button class="btn btn-danger" @onclick="DeleteConfirmed">Видалити</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Ticket> tickets;
     private Ticket newTicket = new Ticket();
-
-    private string filterCategory = string.Empty;
-    private string filterType = string.Empty;
-
-    private IEnumerable<Ticket> FilteredTickets => tickets
-        .Where(t => (string.IsNullOrEmpty(filterCategory) || t.Category == filterCategory) &&
-                    (string.IsNullOrEmpty(filterType) || t.Type == filterType));
+    private bool showCreateModal = false;
+    private bool showConfirmDeleteModal = false;
+    private int deleteTicketId;
+    private Dictionary<int, int> newMessages = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -120,17 +129,38 @@ else
         {
             await LoadTicketsAsync();
             newTicket = new Ticket();
-            ToastService.ShowSuccess("Тікет успішно створено!");
+            showCreateModal = false;
         }
     }
 
-    private async Task DeleteTicket(int ticketId)
+    private void ShowModal()
     {
-        var response = await ApiService.DeleteTicketAsync(ticketId);
+        showCreateModal = true;
+    }
+
+    private void HideModal()
+    {
+        showCreateModal = false;
+    }
+
+    private void ConfirmDelete(int ticketId)
+    {
+        deleteTicketId = ticketId;
+        showConfirmDeleteModal = true;
+    }
+
+    private void HideConfirmDeleteModal()
+    {
+        showConfirmDeleteModal = false;
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        var response = await ApiService.DeleteTicketAsync(deleteTicketId);
         if (response.IsSuccessStatusCode)
         {
             await LoadTicketsAsync();
-            ToastService.ShowSuccess("Тікет успішно видалено!");
         }
+        showConfirmDeleteModal = false;
     }
 }

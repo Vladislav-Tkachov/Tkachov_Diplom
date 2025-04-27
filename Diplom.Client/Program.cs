@@ -21,5 +21,6 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.Get
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<ApiService>();
+builder.Services.AddScoped<ChatService>();
 
 await builder.Build().RunAsync();

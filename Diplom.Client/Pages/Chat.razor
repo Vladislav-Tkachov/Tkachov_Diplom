@@ -1,128 +1,84 @@
-@page "/chat/{TicketId:int}"
-@using Microsoft.AspNetCore.SignalR.Client
+@page "/tickets/{TicketId}/chat"
+@inject Diplom.Client.Services.ChatService ChatService
+@inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Components.Authorization
-@inject NavigationManager Navigation
-@inject Client.Client.CustomAuthStateProvider AuthProvider
-@inject AuthenticationStateProvider AuthStateProvider
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JS
 
-<AuthorizeView>
-    <Authorized>
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-outline-danger" @onclick="Logout">Вийти</button>
-        </div>
-    </Authorized>
-</AuthorizeView>
+<h3>Чат для волонтерів (Тікет: @TicketId)</h3>
 
-<h3 class="text-center">Чат тікету №@TicketId</h3>
-
-<div class="chat-container">
-    <div class="messages-container" @ref="messagesContainerRef">
-        @foreach (var (user, message) in messages)
-        {
-            <div class="alert alert-primary p-2 m-1">
-                <strong>@user:</strong> @message
-            </div>
-        }
+<div class="card p-3 mb-3">
+    <div class="mb-3">
+        <InputText class="form-control" placeholder="Введіть повідомлення..." @bind-Value="currentMessage" @onkeydown="HandleEnter" />
     </div>
-
-    <div class="input-group mt-3">
-        <input @bind="messageInput" @ref="messageInputRef" class="form-control" placeholder="Ваше повідомлення..." @onkeydown="HandleEnterKey" />
-        <button class="btn btn-success" @onclick="SendMessage" disabled="@isSending">
-            @if (isSending)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            }
-            else
-            {
-                <span>Надіслати</span>
-            }
-        </button>
-    </div>
+    <button class="btn btn-primary" @onclick="SendMessage">Відправити</button>
 </div>
 
-<style>
-    .chat-container {
-        max-width: 600px;
-        margin: auto;
-        margin-top: 20px;
-        padding: 20px;
-        background: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .messages-container {
-        max-height: 400px;
-        overflow-y: auto;
-        border: 1px solid #dee2e6;
-        padding: 10px;
-        background: #f8f9fa;
-        border-radius: 5px;
-    }
-</style>
+<div class="overflow-auto border p-3 mb-3" style="height: 300px;" @ref="chatContainer">
+    <ul class="list-unstyled">
+        @foreach (var (user, message) in messages)
+        {
+            <li class="mb-2">
+                @if (user == currentUser)
+                {
+                    <div class="d-flex justify-content-end">
+                        <div class="bg-primary text-white rounded p-2" style="max-width: 70%;">
+                            <small><strong>Я:</strong> @message</small>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex justify-content-start">
+                        <div class="bg-light rounded p-2" style="max-width: 70%;">
+                            <small><strong>@user:</strong> @message</small>
+                        </div>
+                    </div>
+                }
+            </li>
+        }
+    </ul>
+</div>
 
 @code {
-    [Parameter] public int TicketId { get; set; }
+    [Parameter]
+    public string TicketId { get; set; }
 
-    private HubConnection hubConnection;
-    private List<(string user, string message)> messages = new();
-    private string messageInput = "";
-    private string currentUserName = "Анонім";
-    private bool isSending = false;
+    private List<(string User, string Message)> messages = new();
+    private string currentMessage;
+    private string currentUser;
 
-    private ElementReference messageInputRef;
-    private ElementReference messagesContainerRef;
+    private ElementReference chatContainer;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var authState = await authenticationStateTask;
+        currentUser = authState.User.Identity?.Name ?? "Анонім";
 
-        if (user.Identity?.IsAuthenticated ?? false)
+        await ChatService.StartConnectionAsync(NavigationManager.BaseUri);
+        await ChatService.JoinTicketRoomAsync(TicketId);
+
+        ChatService.OnMessageReceived += async (user, message) =>
         {
-            currentUserName = user.Identity.Name ?? "Користувач";
-        }
-
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
-            .Build();
-
-        hubConnection.On<string, string>("ReceiveMessage", async (userName, message) =>
-        {
-            messages.Add((userName, message));
+            messages.Add((user, message));
+            await InvokeAsync(StateHasChanged);
             await ScrollToBottom();
-            StateHasChanged();
-        });
-
-        await hubConnection.StartAsync();
-        await hubConnection.SendAsync("JoinGroup", $"ticket-{TicketId}");
+        };
     }
 
     private async Task SendMessage()
     {
-        if (!string.IsNullOrWhiteSpace(messageInput))
+        if (!string.IsNullOrWhiteSpace(currentMessage))
         {
-            isSending = true;
-            await hubConnection.SendAsync("SendMessage", $"ticket-{TicketId}", currentUserName, messageInput);
-            messageInput = "";
-            await messageInputRef.FocusAsync();
-            isSending = false;
+            await ChatService.SendMessageAsync(TicketId, currentUser, currentMessage);
+            currentMessage = string.Empty;
+            await ScrollToBottom();
         }
     }
 
-    private async Task ScrollToBottom()
-    {
-        await JSRuntime.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
-    }
-
-    private async Task Logout()
-    {
-        await AuthProvider.MarkUserAsLoggedOut();
-        Navigation.NavigateTo("/login");
-    }
-
-    private async Task HandleEnterKey(KeyboardEventArgs e)
+    private async Task HandleEnter(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
@@ -130,12 +86,14 @@
         }
     }
 
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(50);
+        await JS.InvokeVoidAsync("scrollToBottom", chatContainer);
+    }
+
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is not null)
-        {
-            await hubConnection.SendAsync("LeaveGroup", $"ticket-{TicketId}");
-            await hubConnection.DisposeAsync();
-        }
+        await ChatService.LeaveTicketRoomAsync(TicketId);
     }
 }
