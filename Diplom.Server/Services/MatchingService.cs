@@ -1,5 +1,5 @@
 using Diplom.Client.Server.Data;
-using Diplom.Client.Shared.Models;
+using Diplom.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Diplom.Client.Server.Services;

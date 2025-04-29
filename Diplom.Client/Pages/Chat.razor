@@ -1,51 +1,60 @@
 @page "/tickets/{TicketId}/chat"
 @inject Diplom.Client.Services.ChatService ChatService
 @inject NavigationManager NavigationManager
+@inject Diplom.Client.Services.ApiService ApiService
+@using Diplom.Shared.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IJSRuntime JS
 
 <h3>Чат для волонтерів (Тікет: @TicketId)</h3>
-
-<div class="card p-3 mb-3">
-    <div class="mb-3">
-        <InputText class="form-control" placeholder="Введіть повідомлення..." @bind-Value="currentMessage" @onkeydown="HandleEnter" />
+@if (!connected)
+{
+    <p>Підключення до чату...</p>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <div class="mb-3">
+            <InputText class="form-control" placeholder="Ваше повідомлення..." @bind-Value="currentMessage" @onkeydown="HandleEnter" />
+        </div>
+        <button class="btn btn-primary" @onclick="SendMessage">Відправити</button>
     </div>
-    <button class="btn btn-primary" @onclick="SendMessage">Відправити</button>
-</div>
 
-<div class="overflow-auto border p-3 mb-3" style="height: 300px;" @ref="chatContainer">
-    <ul class="list-unstyled">
-        @foreach (var (user, message) in messages)
-        {
-            <li class="mb-2">
-                @if (user == currentUser)
-                {
-                    <div class="d-flex justify-content-end">
-                        <div class="bg-primary text-white rounded p-2" style="max-width: 70%;">
-                            <small><strong>Я:</strong> @message</small>
+    <div class="overflow-auto border p-3 mb-3" style="height: 300px;" @ref="chatContainer">
+        <ul class="list-unstyled">
+            @foreach (var (user, message, timestamp) in messages)
+            {
+                <li class="mb-2">
+                    @if (user == currentUser)
+                    {
+                        <div class="d-flex justify-content-end">
+                            <div class="bg-primary text-white rounded p-2" style="max-width: 70%;">
+                                <small><strong>Я</strong> (@timestamp.ToShortTimeString()): @message</small>
+                            </div>
                         </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="d-flex justify-content-start">
-                        <div class="bg-light rounded p-2" style="max-width: 70%;">
-                            <small><strong>@user:</strong> @message</small>
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-content-start">
+                            <div class="bg-light rounded p-2" style="max-width: 70%;">
+                                <small><strong>@user</strong> (@timestamp.ToShortTimeString()): @message</small>
+                            </div>
                         </div>
-                    </div>
-                }
-            </li>
-        }
-    </ul>
-</div>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+}
 
 @code {
     [Parameter]
     public string TicketId { get; set; }
 
-    private List<(string User, string Message)> messages = new();
+    private List<(string User, string Message, DateTime Timestamp)> messages = new();
     private string currentMessage;
     private string currentUser;
+    private bool connected = false;
 
     private ElementReference chatContainer;
 
@@ -57,15 +66,34 @@
         var authState = await authenticationStateTask;
         currentUser = authState.User.Identity?.Name ?? "Анонім";
 
+        try
+        {
+            var history = await ApiService.GetChatHistoryAsync(TicketId);
+            if (history != null)
+            {
+                foreach (var item in history)
+                {
+                    messages.Add((item.User, item.Message, item.Timestamp));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Помилка при отриманні історії: {ex.Message}");
+        }
+
         await ChatService.StartConnectionAsync(NavigationManager.BaseUri);
         await ChatService.JoinTicketRoomAsync(TicketId);
 
         ChatService.OnMessageReceived += async (user, message) =>
         {
-            messages.Add((user, message));
+            messages.Add((user, message, DateTime.Now));
             await InvokeAsync(StateHasChanged);
             await ScrollToBottom();
         };
+
+        connected = true;
+        await ScrollToBottom();
     }
 
     private async Task SendMessage()

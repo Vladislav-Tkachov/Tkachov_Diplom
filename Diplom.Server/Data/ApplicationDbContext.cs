@@ -1,4 +1,4 @@
-using Diplom.Client.Shared.Models;
+using Diplom.Shared.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,4 +12,6 @@ public class ApplicationDbContext : IdentityDbContext
     }
 
     public DbSet<Ticket> Tickets { get; set; }
+    
+    public DbSet<ChatMessage> ChatMessages { get; set; }
 }

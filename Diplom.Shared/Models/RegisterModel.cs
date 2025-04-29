@@ -1,4 +1,4 @@
-namespace Diplom.Client.Shared.Models;
+namespace Diplom.Shared.Models;
 
 public class RegisterModel
 {

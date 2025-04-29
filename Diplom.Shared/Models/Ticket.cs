@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Diplom.Client.Shared.Models;
+namespace Diplom.Shared.Models;
 
 public class Ticket
 {

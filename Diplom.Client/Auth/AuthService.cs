@@ -2,7 +2,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Blazored.LocalStorage;
-using Diplom.Client.Shared.Models;
+using Diplom.Shared.Models;
 
 namespace Diplom.Client.Client
 {

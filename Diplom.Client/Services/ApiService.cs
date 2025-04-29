@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Blazored.LocalStorage;
-using Diplom.Client.Shared.Models;
+using Diplom.Shared.Models;
 
 namespace Diplom.Client.Services;
 
@@ -41,5 +41,11 @@ public class ApiService
     {
         await SetAuthorizationHeader();
         return await _httpClient.DeleteAsync($"api/tickets/{ticketId}");
+    }
+    
+    public async Task<List<ChatMessage>?> GetChatHistoryAsync(string ticketId)
+    {
+        await SetAuthorizationHeader();
+        return await _httpClient.GetFromJsonAsync<List<ChatMessage>>($"api/chat/{ticketId}");
     }
 }

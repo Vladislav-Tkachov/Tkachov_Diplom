@@ -1,5 +1,5 @@
 using Diplom.Client.Server.Data;
-using Diplom.Client.Shared.Models;
+using Diplom.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
