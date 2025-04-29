@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
-@inject Client.Client.CustomAuthStateProvider AuthProvider
+@inject Client.Auth.CustomAuthStateProvider AuthProvider
 @using Microsoft.AspNetCore.Components.Authorization
 @using Diplom.Pages
 
@@ -11,6 +11,7 @@
         @Body
     </div>
     <Toast />
+    <Footer></Footer>
 </CascadingAuthenticationState>
 
 

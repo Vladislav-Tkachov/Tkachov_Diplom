@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Blazored.LocalStorage;
+using Diplom.Client.Auth;
 using Diplom.Shared.Models;
 
 namespace Diplom.Client.Client
@@ -27,7 +28,7 @@ namespace Diplom.Client.Client
                 return false;
 
             var token = await response.Content.ReadAsStringAsync();
-            await _authStateProvider.MarkUserAsAuthenticated(token);
+            _authStateProvider.MarkUserAsAuthenticated(token);
 
             return true;
         }
@@ -38,9 +39,9 @@ namespace Diplom.Client.Client
             return response.IsSuccessStatusCode;
         }
 
-        public async Task Logout()
+        public void Logout()
         {
-            await _authStateProvider.MarkUserAsLoggedOut();
+            _authStateProvider.MarkUserAsLoggedOut();
         }
     }
 }

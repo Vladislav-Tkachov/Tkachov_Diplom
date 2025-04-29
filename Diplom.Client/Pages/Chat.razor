@@ -2,48 +2,57 @@
 @inject Diplom.Client.Services.ChatService ChatService
 @inject NavigationManager NavigationManager
 @inject Diplom.Client.Services.ApiService ApiService
-@using Diplom.Shared.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IJSRuntime JS
 
-<h3>Чат для волонтерів (Тікет: @TicketId)</h3>
+<h3 class="text-center mb-4">Чат для тікету #@TicketId</h3>
+
 @if (!connected)
 {
-    <p>Підключення до чату...</p>
+    <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Завантаження...</span>
+        </div>
+    </div>
 }
 else
 {
-    <div class="card p-3 mb-3">
-        <div class="mb-3">
-            <InputText class="form-control" placeholder="Ваше повідомлення..." @bind-Value="currentMessage" @onkeydown="HandleEnter" />
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="overflow-auto mb-3" style="height: 400px;" @ref="chatContainer">
+                <ul class="list-unstyled">
+                    @foreach (var (user, message, timestamp) in messages)
+                    {
+                        <li class="mb-3 animate__animated animate__fadeInUp">
+                            @if (user == currentUser)
+                            {
+                                <div class="d-flex justify-content-end">
+                                    <div class="bg-primary text-white p-2 rounded-3 shadow-sm" style="max-width: 70%;">
+                                        <div class="small text-end">@timestamp.ToShortTimeString()</div>
+                                        <div><strong>Я</strong>: @message</div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-content-start">
+                                    <div class="bg-light p-2 rounded-3 shadow-sm" style="max-width: 70%;">
+                                        <div class="small text-start">@timestamp.ToShortTimeString()</div>
+                                        <div><strong>@user</strong>: @message</div>
+                                    </div>
+                                </div>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div class="input-group">
+                <InputText class="form-control" placeholder="Введіть повідомлення..." @bind-Value="currentMessage" @onkeydown="HandleEnter" />
+                <button class="btn btn-primary" @onclick="SendMessage">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
         </div>
-        <button class="btn btn-primary" @onclick="SendMessage">Відправити</button>
-    </div>
-
-    <div class="overflow-auto border p-3 mb-3" style="height: 300px;" @ref="chatContainer">
-        <ul class="list-unstyled">
-            @foreach (var (user, message, timestamp) in messages)
-            {
-                <li class="mb-2">
-                    @if (user == currentUser)
-                    {
-                        <div class="d-flex justify-content-end">
-                            <div class="bg-primary text-white rounded p-2" style="max-width: 70%;">
-                                <small><strong>Я</strong> (@timestamp.ToShortTimeString()): @message</small>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="d-flex justify-content-start">
-                            <div class="bg-light rounded p-2" style="max-width: 70%;">
-                                <small><strong>@user</strong> (@timestamp.ToShortTimeString()): @message</small>
-                            </div>
-                        </div>
-                    }
-                </li>
-            }
-        </ul>
     </div>
 }
 
