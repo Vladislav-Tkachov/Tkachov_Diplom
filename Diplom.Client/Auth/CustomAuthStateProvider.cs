@@ -39,6 +39,7 @@ namespace Diplom.Client.Auth
 
         public void MarkUserAsAuthenticated(string token)
         {
+            _localStorage.SetItemAsync("authToken", token);
             _httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             var claims = ParseClaimsFromJwt(token);
