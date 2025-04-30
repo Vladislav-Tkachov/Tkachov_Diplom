@@ -28,7 +28,7 @@ namespace Diplom.Client.Client
                 return false;
 
             var token = await response.Content.ReadAsStringAsync();
-            _authStateProvider.MarkUserAsAuthenticated(token);
+            await _authStateProvider.MarkUserAsAuthenticated(token);
 
             return true;
         }
