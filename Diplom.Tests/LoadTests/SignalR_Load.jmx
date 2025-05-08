@@ -1,34 +1,70 @@
-<jmeterTestPlan version="1.5" properties="5.5">
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan testname="SignalR LoadTest" enabled="true">
-      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="SignalR LoadTest" enabled="true">
+      <stringProp name="TestPlan.comments"></stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
     </TestPlan>
     <hashTree>
-      <!-- Thread Group -->
-      <ThreadGroup testname="10k Clients" enabled="true">
-        <stringProp name="ThreadGroup.num_threads">10000</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">300</stringProp><!-- 5х хвилин -->
-        <longProp name="ThreadGroup.duration">900</longProp><!-- 15 хв -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="10 000 Clients">
+        <intProp name="ThreadGroup.num_threads">10000</intProp>
+        <intProp name="ThreadGroup.ramp_time">300</intProp>
+        <longProp name="ThreadGroup.duration">900</longProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
       </ThreadGroup>
       <hashTree>
-        <!-- WebSocket Sampler (Neotys Plug-in) -->
-        <com.neotys.websocket.WSSampler testname="ChatHub Send" enabled="true">
-          <stringProp name="WS.url">wss://localhost:5001/chathub</stringProp>
-
-          <!-- SignalR JSON-invoke: ["SendMessage", ["1", "${__threadNum}", "ping"]] -->
-          <stringProp name="WS.message_payload">
-            {"0":"SendMessage","1":["1","${__threadNum}","ping"]}
-          </stringProp>
-
-          <!-- інтервал надсилання -->
-          <stringProp name="WS.send_interval">2000</stringProp>
-        </com.neotys.websocket.WSSampler>
+        <eu.luminis.jmeter.wssampler.OpenWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.OpenWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.OpenWebSocketSampler" testname="WS-Open" enabled="true">
+          <boolProp name="TLS">true</boolProp>
+          <stringProp name="server">localhost</stringProp>
+          <stringProp name="port">5001</stringProp>
+          <stringProp name="path">/chathub</stringProp>
+          <stringProp name="connectTimeout">20000</stringProp>
+          <stringProp name="readTimeout">60000</stringProp>
+        </eu.luminis.jmeter.wssampler.OpenWebSocketSampler>
+        <hashTree/>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="2s Delay" enabled="true">
+          <stringProp name="ConstantTimer.delay">2000</stringProp>
+        </ConstantTimer>
         <hashTree/>
       </hashTree>
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>false</time>
+            <latency>false</latency>
+            <timestamp>false</timestamp>
+            <success>false</success>
+            <label>false</label>
+            <code>false</code>
+            <message>false</message>
+            <threadName>false</threadName>
+            <dataType>false</dataType>
+            <encoding>false</encoding>
+            <assertions>false</assertions>
+            <subresults>false</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>false</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+          </value>
+        </objProp>
+        <stringProp name="filename">results.jtl</stringProp>
+      </ResultCollector>
+      <hashTree/>
     </hashTree>
-
-    <!-- Summary Report + Backend Listener -->
-    <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true"/>
-    <hashTree/>
   </hashTree>
 </jmeterTestPlan>
