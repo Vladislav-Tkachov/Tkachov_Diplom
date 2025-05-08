@@ -1,0 +1,34 @@
+<jmeterTestPlan version="1.5" properties="5.5">
+  <hashTree>
+    <TestPlan testname="SignalR LoadTest" enabled="true">
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <!-- Thread Group -->
+      <ThreadGroup testname="10k Clients" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">10000</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">300</stringProp><!-- 5х хвилин -->
+        <longProp name="ThreadGroup.duration">900</longProp><!-- 15 хв -->
+      </ThreadGroup>
+      <hashTree>
+        <!-- WebSocket Sampler (Neotys Plug-in) -->
+        <com.neotys.websocket.WSSampler testname="ChatHub Send" enabled="true">
+          <stringProp name="WS.url">wss://localhost:5001/chathub</stringProp>
+
+          <!-- SignalR JSON-invoke: ["SendMessage", ["1", "${__threadNum}", "ping"]] -->
+          <stringProp name="WS.message_payload">
+            {"0":"SendMessage","1":["1","${__threadNum}","ping"]}
+          </stringProp>
+
+          <!-- інтервал надсилання -->
+          <stringProp name="WS.send_interval">2000</stringProp>
+        </com.neotys.websocket.WSSampler>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+
+    <!-- Summary Report + Backend Listener -->
+    <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true"/>
+    <hashTree/>
+  </hashTree>
+</jmeterTestPlan>
