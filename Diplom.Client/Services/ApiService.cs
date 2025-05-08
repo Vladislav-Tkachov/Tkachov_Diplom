@@ -19,6 +19,7 @@ public class ApiService
     private async Task SetAuthorizationHeader()
     {
         var token = await _localStorage.GetItemAsStringAsync("authToken");
+        token = token?.Trim('"');
         if (!string.IsNullOrWhiteSpace(token))
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);

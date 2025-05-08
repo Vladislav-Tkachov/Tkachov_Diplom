@@ -33,6 +33,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> Post([FromBody] Ticket ticket)
     {
         if (!ModelState.IsValid)

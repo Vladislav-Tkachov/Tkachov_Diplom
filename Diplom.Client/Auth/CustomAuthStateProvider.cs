@@ -39,6 +39,7 @@ namespace Diplom.Client.Auth
 
         public async Task MarkUserAsAuthenticated(string token)
         {
+            token = token.Trim('"');
             await _localStorage.SetItemAsync("authToken", token);
             _httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);

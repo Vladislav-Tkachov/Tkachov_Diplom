@@ -23,7 +23,11 @@ public class ChatService : IAsyncDisposable
         var token = await _localStorage.GetItemAsync<string>("authToken");
 
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl(baseUrl + "chathub", options => { options.AccessTokenProvider = () => Task.FromResult(token); })
+            .WithUrl(baseUrl + "chathub",
+                options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(token);
+                })
             .WithAutomaticReconnect()
             .Build();
 
